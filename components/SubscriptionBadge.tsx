@@ -13,24 +13,24 @@ const SubscriptionBadge = () => {
     ? {
         name: "Pro Companion",
         icon: Crown,
-        className: "border-amber-400/60 bg-amber-50 text-amber-700 hover:bg-amber-100",
+        className: "border-amber-400/60 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-300/60 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50",
       }
     : has?.({ plan: "core" })
       ? {
           name: "Core Learner",
           icon: Sparkles,
-          className: "border-violet-400/60 bg-violet-50 text-violet-700 hover:bg-violet-100",
+          className: "border-violet-400/60 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:border-violet-300/60 dark:bg-violet-950/40 dark:text-violet-300 dark:hover:bg-violet-900/50",
         }
       : has?.({ plan: "basic" })
         ? {
             name: "Basic Plan",
             icon: Star,
-            className: "border-sky-400/60 bg-sky-50 text-sky-700 hover:bg-sky-100",
+            className: "border-sky-400/60 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:border-sky-300/60 dark:bg-sky-950/40 dark:text-sky-300 dark:hover:bg-sky-900/50",
           }
         : {
             name: "Unknown Plan",
             icon: Star,
-            className: "border-gray-400/60 bg-gray-50 text-gray-700 hover:bg-gray-100",
+            className: "border-gray-400/60 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-400/60 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700",
           };
   const PlanIcon = plan.icon;
 

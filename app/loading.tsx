@@ -14,6 +14,15 @@ export default function Loading() {
             alt="Vocalize"
             width={272}
             height={88}
+            className="dark:hidden"
+            priority
+          />
+          <Image
+            src="/images/icon_dark.png"
+            alt="Vocalize"
+            width={272}
+            height={88}
+            className="hidden dark:block"
             priority
           />
         </div>
