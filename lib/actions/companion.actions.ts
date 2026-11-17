@@ -19,6 +19,7 @@ export const createCompanion = async (formData: CreateCompanion) => {
 }
 
 export const getAllCompanions = async ({ limit = 10, page = 1, subject, topic }: GetAllCompanions) => {
+    const { userId } = await auth();
     const supabase = createSupabaseClient();
 
     let query = supabase.from('companions').select();
@@ -38,7 +39,28 @@ export const getAllCompanions = async ({ limit = 10, page = 1, subject, topic }:
 
     if(error) throw new Error(error.message);
 
-    return companions;
+    if (!userId) {
+        return companions.map((companion) => ({ ...companion, bookmarked: false }));
+    }
+
+    if (companions.length === 0) {
+        return [];
+    }
+
+    const { data: bookmarks, error: bookmarksError } = await supabase
+        .from('bookmarks')
+        .select('companion_id')
+        .eq('user_id', userId)
+        .in('companion_id', companions.map((companion) => companion.id));
+
+    if (bookmarksError) throw new Error(bookmarksError.message);
+
+    const bookmarkedIds = new Set(bookmarks.map(({ companion_id }) => companion_id));
+
+    return companions.map((companion) => ({
+        ...companion,
+        bookmarked: bookmarkedIds.has(companion.id),
+    }));
 }
 
 export const getCompanion = async (id: string) => {
@@ -56,6 +78,7 @@ export const getCompanion = async (id: string) => {
 
 export const addToSessionHistory = async (companionId: string) => {
     const { userId } = await auth();
+    if (!userId) throw new Error('You must be signed in to save session history');
     const supabase = createSupabaseClient();
     const { data, error } = await supabase.from('session_history')
         .insert({
@@ -68,31 +91,66 @@ export const addToSessionHistory = async (companionId: string) => {
     return data;
 }
 
+export const canStartSession = async () => {
+    const { userId, has } = await auth();
+
+    if (!userId) {
+        return { allowed: false, limit: 0, used: 0 };
+    }
+
+    if (!has({ plan: 'basic' })) {
+        return { allowed: true, limit: null, used: 0 };
+    }
+
+    const limit = 10;
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const supabase = createSupabaseClient();
+    const { count, error } = await supabase
+        .from('session_history')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', startOfMonth.toISOString());
+
+    if (error) throw new Error(error.message);
+
+    const used = count ?? 0;
+    return { allowed: used < limit, limit, used };
+}
+
 export const getRecentSessions = async (limit = 10) => {
     const supabase = createSupabaseClient();
     const { data, error } = await supabase
         .from('session_history')
-        .select(`companions:companion_id (*)`)
+        .select(`id, companions:companion_id (*)`)
         .order('created_at', { ascending: false })
         .limit(limit)
 
     if(error) throw new Error(error.message);
 
-    return data.map(({ companions }) => companions);
+    return data.map(({ id: sessionId, companions }) => ({
+        ...companions,
+        sessionId,
+    }));
 }
 
 export const getUserSessions = async (userId: string, limit = 10) => {
     const supabase = createSupabaseClient();
     const { data, error } = await supabase
         .from('session_history')
-        .select(`companions:companion_id (*)`)
+        .select(`id, companions:companion_id (*)`)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(limit)
 
     if(error) throw new Error(error.message);
 
-    return data.map(({ companions }) => companions);
+    return data.map(({ id: sessionId, companions }) => ({
+        ...companions,
+        sessionId,
+    }));
 }
 
 export const getUserCompanions = async (userId: string) => {
@@ -150,6 +208,8 @@ export const addBookmark = async (companionId: string, path: string) => {
   }
 
   revalidatePath(path);
+  revalidatePath("/", "page");
+  revalidatePath("/companions", "page");
   return data;
 };
 
@@ -166,6 +226,8 @@ export const removeBookmark = async (companionId: string, path: string) => {
     throw new Error(error.message);
   }
   revalidatePath(path);
+  revalidatePath("/", "page");
+  revalidatePath("/companions", "page");
   return data;
 };
 

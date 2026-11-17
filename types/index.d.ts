@@ -24,6 +24,7 @@ type Companion = Models.DocumentList<Models.Document> & {
   topic: string;
   duration: number;
   bookmarked: boolean;
+  sessionId?: string;
 };
 
 interface CreateCompanion {

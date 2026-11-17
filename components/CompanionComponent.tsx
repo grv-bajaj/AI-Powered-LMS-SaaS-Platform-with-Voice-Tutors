@@ -6,7 +6,7 @@ import {vapi} from "@/lib/vapi.sdk";
 import Image from "next/image";
 import {Lottie, LottieHandle} from "lottie-react";
 import soundwaves from '@/constants/soundwaves.json'
-import {addToSessionHistory} from "@/lib/actions/companion.actions";
+import {addToSessionHistory, canStartSession} from "@/lib/actions/companion.actions";
 
 enum CallStatus {
     INACTIVE = 'INACTIVE',
@@ -20,6 +20,7 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [messages, setMessages] = useState<SavedMessage[]>([]);
+    const [sessionError, setSessionError] = useState<string | null>(null);
 
     const lottieRef = useRef<LottieHandle>(null);
 
@@ -77,16 +78,36 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
     }
 
     const handleCall = async () => {
+        setSessionError(null);
         setCallStatus(CallStatus.CONNECTING)
 
-        const assistantOverrides = {
-            variableValues: { subject, topic, style },
-            clientMessages: ["transcript"],
-            serverMessages: [],
-        }
+        try {
+            const sessionPermission = await canStartSession();
 
-        // @ts-expect-error Vapi SDK typings do not include assistant overrides.
-        vapi.start(configureAssistant(voice, style), assistantOverrides)
+            if (!sessionPermission.allowed) {
+                setCallStatus(CallStatus.INACTIVE);
+                setSessionError(
+                    `You have used all ${sessionPermission.limit} conversations available this month. Upgrade your plan to continue learning.`
+                );
+                return;
+            }
+
+            const assistantOverrides = {
+                variableValues: { subject, topic, style },
+                clientMessages: ["transcript"],
+                serverMessages: [],
+            }
+
+            // @ts-expect-error Vapi SDK typings do not include assistant overrides.
+            vapi.start(configureAssistant(voice, style), assistantOverrides)
+        } catch (error) {
+            setCallStatus(CallStatus.INACTIVE);
+            setSessionError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to start the session. Please try again."
+            );
+        }
     }
 
     const handleDisconnect = () => {
@@ -141,6 +162,11 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
                         : 'Start Session'
                         }
                     </button>
+                    {sessionError && (
+                        <p className="text-center text-sm text-red-600" role="alert">
+                            {sessionError}
+                        </p>
+                    )}
                 </div>
             </section>
 
