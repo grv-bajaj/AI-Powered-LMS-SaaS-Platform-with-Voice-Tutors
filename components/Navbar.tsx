@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import NavItems from "./NavItems";
+import SubscriptionBadge from "./SubscriptionBadge";
 import { SignInButton, Show, UserButton } from "@clerk/nextjs";
 import { Suspense } from "react";
 
@@ -21,7 +22,10 @@ const Navbar = () => {
             </SignInButton>
           </Show>
           <Show when="signed-in">
-            <UserButton />
+            <div className="flex items-center gap-3">
+              <SubscriptionBadge />
+              <UserButton />
+            </div>
           </Show>
         </Suspense>
       </div>
