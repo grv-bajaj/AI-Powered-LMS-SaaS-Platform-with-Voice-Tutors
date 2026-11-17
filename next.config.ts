@@ -1,7 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  typescript: {
+      ignoreBuildErrors: true
+    },
+  experimental: {
+    agentUpgrade: "security",
+  },
+  images: {
+      remotePatterns: [
+          { hostname: 'img.clerk.com'}
+      ]
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

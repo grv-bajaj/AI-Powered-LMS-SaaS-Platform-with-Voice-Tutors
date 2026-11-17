@@ -35,7 +35,11 @@ const formSchema = z.object({
 })
 
 const CompanionForm = () => {
-    const form = useForm<z.input<typeof formSchema>, z.output<typeof formSchema>>({
+    const form = useForm<
+        z.input<typeof formSchema>,
+        undefined,
+        z.output<typeof formSchema>
+    >({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
@@ -237,6 +241,7 @@ const CompanionForm = () => {
                                 placeholder="15"
                                 className="input"
                                 aria-invalid={fieldState.invalid}
+                                value={String(field.value ?? "")}
                             />
                             {fieldState.invalid && (
                                 <FieldError errors={[fieldState.error]} />
