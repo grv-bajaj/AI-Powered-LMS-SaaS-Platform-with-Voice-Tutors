@@ -11,7 +11,8 @@ export const createCompanion = async (formData: CreateCompanion) => {
     const { data, error } = await supabase
         .from('companions')
         .insert({...formData, author })
-        .select();
+        .select('id, name, subject, topic, voice, style, duration')
+        .single();
 
     if(error || !data) throw new Error(error?.message || 'Failed to create a companion');
 
@@ -19,7 +20,7 @@ export const createCompanion = async (formData: CreateCompanion) => {
     revalidatePath("/companions", "page");
     revalidatePath("/", "page");
 
-    return data[0];
+    return data;
 }
 
 export const getAllCompanions = async ({ limit = 10, page = 1, subject, topic }: GetAllCompanions) => {

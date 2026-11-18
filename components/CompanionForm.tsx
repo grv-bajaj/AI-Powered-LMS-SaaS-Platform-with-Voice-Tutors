@@ -23,7 +23,8 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { subjects } from "@/constants"
 import { createCompanion } from "@/lib/actions/companion.actions"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import { Sparkles } from "lucide-react"
 
 const formSchema = z.object({
@@ -36,6 +37,7 @@ const formSchema = z.object({
 })
 
 const CompanionForm = () => {
+    const router = useRouter();
     const form = useForm<
         z.input<typeof formSchema>,
         undefined,
@@ -52,6 +54,10 @@ const CompanionForm = () => {
         },
     })
 
+    useEffect(() => {
+        router.prefetch("/companions");
+    }, [router]);
+
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
       const companion = await createCompanion(values)
       if (companion) {
@@ -63,10 +69,11 @@ const CompanionForm = () => {
               style: "",
               duration: "",
           })
-          redirect(`/companions/${companion.id}`)
+          router.prefetch(`/companions/${companion.id}`);
+          router.push(`/companions/${companion.id}`);
       } else {
           console.log("Failed to create a companion")
-          redirect("/")
+          router.push("/")
       }
     }
 

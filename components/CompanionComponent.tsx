@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {cn, configureAssistant, getSubjectColor} from "@/lib/utils";
 import {vapi} from "@/lib/vapi.sdk";
 import Image from "next/image";
@@ -25,6 +25,10 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
     const [sessionError, setSessionError] = useState<string | null>(null);
 
     const lottieRef = useRef<LottieHandle>(null);
+    const assistant = useMemo(
+        () => configureAssistant(voice, style),
+        [voice, style],
+    );
 
     useEffect(() => {
         if (!isSpeaking) {
@@ -106,7 +110,7 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
             }
 
             // @ts-expect-error Vapi SDK typings do not include assistant overrides.
-            vapi.start(configureAssistant(voice, style), assistantOverrides)
+            vapi.start(assistant, assistantOverrides)
         } catch (error) {
             setCallStatus(CallStatus.INACTIVE);
             setSessionError(
