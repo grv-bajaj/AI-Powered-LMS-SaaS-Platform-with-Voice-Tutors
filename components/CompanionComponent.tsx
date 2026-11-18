@@ -19,6 +19,7 @@ enum CallStatus {
 const CompanionComponent = ({ companionId, subject, topic, name, userName, userImage, style, voice }: CompanionComponentProps) => {
     const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [speechCycle, setSpeechCycle] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
     const [messages, setMessages] = useState<SavedMessage[]>([]);
     const [sessionError, setSessionError] = useState<string | null>(null);
@@ -26,14 +27,16 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
     const lottieRef = useRef<LottieHandle>(null);
 
     useEffect(() => {
-        if(lottieRef) {
-            if(isSpeaking) {
-                lottieRef.current?.play()
-            } else {
-                lottieRef.current?.stop()
-            }
+        if (!isSpeaking) {
+            lottieRef.current?.stop();
+            return;
         }
-    }, [isSpeaking, lottieRef])
+
+        lottieRef.current?.stop();
+        lottieRef.current?.seek({ frame: 0 });
+        lottieRef.current?.setLoop(true);
+        lottieRef.current?.play();
+    }, [isSpeaking, speechCycle])
 
     useEffect(() => {
         const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
@@ -50,7 +53,10 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
             }
         }
 
-        const onSpeechStart = () => setIsSpeaking(true);
+        const onSpeechStart = () => {
+            setIsSpeaking(true);
+            setSpeechCycle((cycle) => cycle + 1);
+        };
         const onSpeechEnd = () => setIsSpeaking(false);
 
         const onError = (error: Error) => console.log('Error', error);
@@ -135,6 +141,7 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
                                 lottieRef={lottieRef}
                                 src={soundwaves}
                                 autoplay={false}
+                                loop={true}
                                 className="companion-lottie"
                             />
                         </div>
