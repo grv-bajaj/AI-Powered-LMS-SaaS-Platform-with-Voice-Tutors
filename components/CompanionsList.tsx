@@ -17,6 +17,11 @@ interface CompanionsListProps {
 }
 
 const CompanionsList = ({ title, companions, classNames }: CompanionsListProps) => {
+  const uniqueCompanions = companions?.filter((companion, index, all) => {
+    const key = companion.sessionId ?? companion.id;
+    return all.findIndex((item) => (item.sessionId ?? item.id) === key) === index;
+  });
+
   return (
     <article className={cn('companion-list', classNames)}>
       <h2 className="font-bold text-3xl">{title}</h2>
@@ -29,7 +34,7 @@ const CompanionsList = ({ title, companions, classNames }: CompanionsListProps) 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {companions?.map(({ id, sessionId, subject, name, topic, duration }) => (
+          {uniqueCompanions?.map(({ id, sessionId, subject, name, topic, duration }) => (
             <TableRow key={sessionId ?? id}>
               <TableCell>
                 <Link href={`/companions/${id}`}>

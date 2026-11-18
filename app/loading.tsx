@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function Loading() {
   return (
     <main
-      className="flex min-h-[calc(100vh-80px)] items-center justify-center"
+      className="fixed inset-0 z-[100] m-0 flex h-dvh w-screen max-w-none items-center justify-center px-0 pt-0 bg-background"
       aria-busy="true"
       aria-live="polite"
     >

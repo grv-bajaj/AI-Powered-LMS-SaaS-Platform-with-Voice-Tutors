@@ -2,7 +2,7 @@
 
 import {auth} from "@clerk/nextjs/server";
 import {createSupabaseClient} from "@/lib/supabase";
-import { revalidatePath } from "next/cache";
+import { cacheLife, cacheTag, revalidatePath, revalidateTag } from "next/cache";
 
 export const createCompanion = async (formData: CreateCompanion) => {
     const { userId: author } = await auth();
@@ -14,6 +14,10 @@ export const createCompanion = async (formData: CreateCompanion) => {
         .select();
 
     if(error || !data) throw new Error(error?.message || 'Failed to create a companion');
+
+    revalidateTag("companions", "max");
+    revalidatePath("/companions", "page");
+    revalidatePath("/", "page");
 
     return data[0];
 }
@@ -64,7 +68,11 @@ export const getAllCompanions = async ({ limit = 10, page = 1, subject, topic }:
 }
 
 export const getCompanion = async (id: string) => {
-    const supabase = createSupabaseClient();
+    "use cache";
+    cacheLife("hours");
+    cacheTag(`companion-${id}`);
+
+    const supabase = createSupabaseClient(false);
 
     const { data, error } = await supabase
         .from('companions')
@@ -199,10 +207,32 @@ export const addBookmark = async (companionId: string, path: string) => {
   const { userId } = await auth();
   if (!userId) return;
   const supabase = createSupabaseClient();
-  const { data, error } = await supabase.from("bookmarks").insert({
-    companion_id: companionId,
-    user_id: userId,
-  });
+
+  const { data: existing, error: existingError } = await supabase
+    .from("bookmarks")
+    .select("id")
+    .eq("companion_id", companionId)
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+  if (existing) {
+    revalidatePath(path);
+    revalidatePath("/", "page");
+    revalidatePath("/companions", "page");
+    return existing;
+  }
+
+  const { data, error } = await supabase
+    .from("bookmarks")
+    .upsert(
+      { companion_id: companionId, user_id: userId },
+      { onConflict: "user_id,companion_id", ignoreDuplicates: true },
+    )
+    .select();
   if (error) {
     throw new Error(error.message);
   }
@@ -235,10 +265,43 @@ export const getBookmarkedCompanions = async (userId: string) => {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
     .from("bookmarks")
-    .select(`companions:companion_id (*)`)
+    .select(`id, companion_id, companions:companion_id (*)`)
     .eq("user_id", userId);
   if (error) {
     throw new Error(error.message);
   }
-  return data.map(({ companions }) => companions);
+
+  const uniqueBookmarks = new Map<
+    string,
+    { companion: Companion; bookmarkId: number | string }
+  >();
+  const duplicateBookmarkIds: (number | string)[] = [];
+
+  for (const row of data) {
+    if (!row.companions) continue;
+
+    const existing = uniqueBookmarks.has(row.companion_id);
+    if (existing) {
+      duplicateBookmarkIds.push(row.id);
+      continue;
+    }
+
+    uniqueBookmarks.set(row.companion_id, {
+      companion: row.companions as Companion,
+      bookmarkId: row.id,
+    });
+  }
+
+  if (duplicateBookmarkIds.length > 0) {
+    const { error: cleanupError } = await supabase
+      .from("bookmarks")
+      .delete()
+      .in("id", duplicateBookmarkIds);
+
+    if (cleanupError) {
+      console.error("Failed to remove duplicate bookmarks", cleanupError);
+    }
+  }
+
+  return [...uniqueBookmarks.values()].map(({ companion }) => companion);
 };

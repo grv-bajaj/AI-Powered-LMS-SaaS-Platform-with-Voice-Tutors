@@ -8,8 +8,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 const Page = async () => {
-  const { userId } = await auth();
-  const companions = await getAllCompanions({ limit: 3 });
+  const [{ userId }, companions] = await Promise.all([
+    auth(),
+    getAllCompanions({ limit: 3 }),
+  ]);
   const recentSessionsCompanions = userId
     ? await getUserSessions(userId, 10)
     : [];
@@ -17,7 +19,6 @@ const Page = async () => {
   return (
     <main>
       <h1>Popular Companions</h1>
-
       <section className='home-section'>
         {companions.map((companion) => (
           <CompanionCard
