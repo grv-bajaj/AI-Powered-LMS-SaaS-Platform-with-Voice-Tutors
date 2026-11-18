@@ -23,7 +23,7 @@ const CompanionsList = ({ title, companions, classNames }: CompanionsListProps) 
   });
 
   return (
-    <article className={cn('companion-list', classNames)}>
+    <article className={cn('companion-list !pb-5', classNames)}>
       <h2 className="font-bold text-3xl">{title}</h2>
       <Table>
         <TableHeader>
@@ -36,8 +36,8 @@ const CompanionsList = ({ title, companions, classNames }: CompanionsListProps) 
         <TableBody>
           {uniqueCompanions?.map(({ id, sessionId, subject, name, topic, duration }) => (
             <TableRow key={sessionId ?? id}>
-              <TableCell>
-                <Link href={`/companions/${id}`}>
+              <TableCell className="py-2">
+                <Link href={`/companions/${id}`} className="no-underline hover:no-underline">
                   <div className="flex items-center gap-2">
                     <div
                       className="size-[72px] flex items-center justify-center rounded-lg max-md:hidden"
@@ -50,9 +50,9 @@ const CompanionsList = ({ title, companions, classNames }: CompanionsListProps) 
                         height={35}
                       />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <p className="font-bold text-2xl">{name}</p>
-                      <p className="text-lg">{topic}</p>
+                    <div className="flex flex-col gap-1">
+                      <p className="font-bold text-2xl no-underline">{name}</p>
+                      <p className="text-lg no-underline">{topic}</p>
                     </div>
                   </div>
                 </Link>
