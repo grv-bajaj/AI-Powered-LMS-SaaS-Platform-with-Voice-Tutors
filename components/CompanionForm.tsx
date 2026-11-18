@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { subjects } from "@/constants"
 import { createCompanion } from "@/lib/actions/companion.actions"
 import { redirect } from "next/navigation"
+import { Sparkles } from "lucide-react"
 
 const formSchema = z.object({
     name: z.string().min(1, { message: "Companion is required." }),
@@ -71,7 +72,7 @@ const CompanionForm = () => {
 
     return (
         <form onSubmit={form.handleSubmit(onSubmit)}>
-            <FieldGroup className="gap-8">
+            <FieldGroup className="gap-5">
 
                 {/* Companion Name */}
                 <Controller
@@ -258,8 +259,13 @@ const CompanionForm = () => {
                     )}
                 />
 
-                <Button type="submit" className="w-full cursor-pointer">
-                    Build Your Companion
+                <Button
+                    type="submit"
+                    className="companion-submit w-full cursor-pointer"
+                    disabled={form.formState.isSubmitting}
+                >
+                    <Sparkles size={17} />
+                    {form.formState.isSubmitting ? "Creating companion..." : "Build Your Companion"}
                 </Button>
 
             </FieldGroup>

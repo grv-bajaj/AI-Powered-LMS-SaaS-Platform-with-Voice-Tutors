@@ -4,6 +4,7 @@ import {redirect} from "next/navigation";
 import {getSubjectColor} from "@/lib/utils";
 import Image from "next/image";
 import CompanionComponent from "@/components/CompanionComponent";
+import { Clock3 } from "lucide-react";
 
 interface CompanionSessionPageProps {
     params: Promise<{ id: string}>;
@@ -41,7 +42,8 @@ const CompanionSession = async ({ params }: CompanionSessionPageProps) => {
                         <p className="text-lg">{topic}</p>
                     </div>
                 </div>
-                <div className="items-start text-2xl max-md:hidden">
+                <div className="session-duration items-center gap-2 text-2xl max-md:hidden">
+                    <Clock3 size={20} />
                     {duration} minutes
                 </div>
             </article>

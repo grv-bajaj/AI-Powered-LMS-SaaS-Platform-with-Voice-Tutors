@@ -6,6 +6,7 @@ import {getSubjectColor} from "@/lib/utils";
 import { auth } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 
 const Page = async () => {
   const [{ userId }, companions] = await Promise.all([
@@ -18,7 +19,13 @@ const Page = async () => {
 
   return (
     <main>
-      <h1>Popular Companions</h1>
+      <div className="page-heading">
+        <div className="page-heading-icon"><Sparkles size={20} /></div>
+        <div>
+          <p className="page-heading-eyebrow">Recommended for you</p>
+          <h1>Popular Companions</h1>
+        </div>
+      </div>
       <section className='home-section'>
         {companions.map((companion) => (
           <CompanionCard

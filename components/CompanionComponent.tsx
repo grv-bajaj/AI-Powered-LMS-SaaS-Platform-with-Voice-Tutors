@@ -7,6 +7,7 @@ import Image from "next/image";
 import {Lottie, LottieHandle} from "lottie-react";
 import soundwaves from '@/constants/soundwaves.json'
 import {addToSessionHistory, canStartSession} from "@/lib/actions/companion.actions";
+import { Mic, MicOff, Radio, Square } from "lucide-react";
 
 enum CallStatus {
     INACTIVE = 'INACTIVE',
@@ -69,7 +70,7 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
             vapi.off('speech-start', onSpeechStart);
             vapi.off('speech-end', onSpeechEnd);
         }
-    }, []);
+    }, [companionId])
 
     const toggleMicrophone = () => {
         const isMuted = vapi.isMuted();
@@ -123,7 +124,7 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
                         <div
                             className={
                             cn(
-                                'absolute transition-opacity duration-1000', callStatus === CallStatus.FINISHED || callStatus === CallStatus.INACTIVE ? 'opacity-1001' : 'opacity-0', callStatus === CallStatus.CONNECTING && 'opacity-100 animate-pulse'
+                            'absolute transition-opacity duration-1000', callStatus === CallStatus.FINISHED || callStatus === CallStatus.INACTIVE ? 'opacity-100' : 'opacity-0', callStatus === CallStatus.CONNECTING && 'opacity-100 animate-pulse'
                             )
                         }>
                             <Image src={`/icons/${subject}.svg`} alt={subject} width={150} height={150} className="max-sm:w-fit" />
@@ -149,12 +150,19 @@ const CompanionComponent = ({ companionId, subject, topic, name, userName, userI
                         </p>
                     </div>
                     <button className="btn-mic" onClick={toggleMicrophone} disabled={callStatus !== CallStatus.ACTIVE}>
-                        <Image src={isMuted ? '/icons/mic-off.svg' : '/icons/mic-on.svg'} alt="mic" width={36} height={36} />
+                        {isMuted
+                            ? <MicOff size={36} strokeWidth={1.8} />
+                            : <Mic size={36} strokeWidth={1.8} />}
                         <p className="max-sm:hidden">
                             {isMuted ? 'Turn on microphone' : 'Turn off microphone'}
                         </p>
                     </button>
-                    <button className={cn('btn-session', callStatus ===CallStatus.ACTIVE && 'bg-red-700 hover:bg-red-800', callStatus === CallStatus.CONNECTING && 'animate-pulse')} onClick={callStatus === CallStatus.ACTIVE ? handleDisconnect : handleCall}>
+                    <button className={cn('btn-session flex items-center justify-center gap-2', callStatus ===CallStatus.ACTIVE && 'bg-red-700 hover:bg-red-800', callStatus === CallStatus.CONNECTING && 'animate-pulse')} onClick={callStatus === CallStatus.ACTIVE ? handleDisconnect : handleCall}>
+                        {callStatus === CallStatus.ACTIVE
+                            ? <Square size={15} fill="currentColor" />
+                            : callStatus === CallStatus.CONNECTING
+                                ? <Radio size={16} className="animate-pulse" />
+                                : <Radio size={16} />}
                         {callStatus === CallStatus.ACTIVE
                         ? "End Session"
                         : callStatus === CallStatus.CONNECTING

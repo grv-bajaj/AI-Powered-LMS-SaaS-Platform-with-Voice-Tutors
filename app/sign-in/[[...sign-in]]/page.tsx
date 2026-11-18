@@ -5,7 +5,7 @@ export default function page() {
   return (
     <Suspense fallback={null}>
       <main className="flex items-center justify-center">
-        <SignIn /> 
+        <SignIn />
       </main>
     </Suspense>
   );

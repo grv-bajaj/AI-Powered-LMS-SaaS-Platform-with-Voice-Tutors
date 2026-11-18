@@ -20,7 +20,7 @@ const NavItems = () => {
                 href={href}
                 key={label}
                 className={cn(
-                    "transition-colors",
+                    "nav-item transition-colors",
                     pathname === href && "font-bold text-[#fe5933]"
                 )}
             >

@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/companion.actions";
 import Image from "next/image";
 import CompanionsList from "@/components/CompanionsList";
+import { GraduationCap, Trophy } from "lucide-react";
 
 const Profile = async () => {
   const user = await currentUser();
@@ -44,21 +45,16 @@ const Profile = async () => {
           </div>
         </div>
         <div className="flex gap-4">
-          <div className="border border-foreground rouded-lg p-3 gap-2 flex flex-col h-fit">
+          <div className="profile-stat">
             <div className="flex gap-2 items-center">
-              <Image
-                src="/icons/check.svg"
-                alt="checkmark"
-                width={22}
-                height={22}
-              />
+              <Trophy size={22} className="text-[#fe5933]" />
               <p className="text-2xl font-bold">{sessionHistory.length}</p>
             </div>
             <div>Lessons completed</div>
           </div>
-          <div className="border border-foreground rouded-lg p-3 gap-2 flex flex-col h-fit">
+          <div className="profile-stat">
             <div className="flex gap-2 items-center">
-              <Image src="/icons/cap.svg" alt="cap" width={22} height={22} />
+              <GraduationCap size={22} className="text-[#fe5933]" />
               <p className="text-2xl font-bold">{companions.length}</p>
             </div>
             <div>Companions created</div>
