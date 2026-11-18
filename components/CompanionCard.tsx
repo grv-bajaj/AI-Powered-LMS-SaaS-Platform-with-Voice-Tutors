@@ -1,7 +1,6 @@
 "use client";
 
-import { removeBookmark } from "@/lib/actions/companion.actions";
-import { addBookmark } from "@/lib/actions/companion.actions";
+import { toggleBookmark } from "@/lib/actions/companion.actions";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -35,12 +34,8 @@ const CompanionCard = ({
     setIsUpdatingBookmark(true);
 
     try {
-      if (isBookmarked) {
-        await removeBookmark(id, pathname);
-      } else {
-        await addBookmark(id, pathname);
-      }
-      setIsBookmarked(!isBookmarked);
+      await toggleBookmark(id, isBookmarked, pathname);
+      setIsBookmarked((current) => !current);
       router.refresh();
     } catch (error) {
       console.error("Failed to update bookmark", error);

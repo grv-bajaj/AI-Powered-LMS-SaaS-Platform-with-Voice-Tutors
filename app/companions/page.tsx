@@ -32,7 +32,7 @@ const CompanionsLibrary = async ({ searchParams }: SearchParams) => {
             <section className="companions-grid">
                 {companions.map((companion) => (
                     <CompanionCard
-                        key={companion.id}
+                        key={`${companion.id}-${companion.bookmarked}`}
                         {...companion}
                         color={getSubjectColor(companion.subject)}
                     />

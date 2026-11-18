@@ -203,105 +203,54 @@ export const newCompanionPermissions = async () => {
     }
 }
 
-export const addBookmark = async (companionId: string, path: string) => {
+export const toggleBookmark = async (
+  companionId: string,
+  isBookmarked: boolean,
+  path: string,
+) => {
   const { userId } = await auth();
-  if (!userId) return;
+  if (!userId) throw new Error("You must be signed in to bookmark a companion");
+
   const supabase = createSupabaseClient();
 
-  const { data: existing, error: existingError } = await supabase
-    .from("bookmarks")
-    .select("id")
-    .eq("companion_id", companionId)
-    .eq("user_id", userId)
-    .limit(1)
-    .maybeSingle();
+  const { error } = isBookmarked
+    ? await supabase
+        .from("bookmarks")
+        .delete()
+        .eq("companion_id", companionId)
+        .eq("user_id", userId)
+    : await supabase
+        .from("bookmarks")
+        .insert({ companion_id: companionId, user_id: userId })
+        .select("id")
+        .single();
 
-  if (existingError) {
-    throw new Error(existingError.message);
-  }
-  if (existing) {
-    revalidatePath(path);
-    revalidatePath("/", "page");
-    revalidatePath("/companions", "page");
-    return existing;
-  }
-
-  const { data, error } = await supabase
-    .from("bookmarks")
-    .upsert(
-      { companion_id: companionId, user_id: userId },
-      { onConflict: "user_id,companion_id", ignoreDuplicates: true },
-    )
-    .select();
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 
   revalidatePath(path);
   revalidatePath("/", "page");
   revalidatePath("/companions", "page");
-  return data;
-};
-
-export const removeBookmark = async (companionId: string, path: string) => {
-  const { userId } = await auth();
-  if (!userId) return;
-  const supabase = createSupabaseClient();
-  const { data, error } = await supabase
-    .from("bookmarks")
-    .delete()
-    .eq("companion_id", companionId)
-    .eq("user_id", userId);
-  if (error) {
-    throw new Error(error.message);
-  }
-  revalidatePath(path);
-  revalidatePath("/", "page");
-  revalidatePath("/companions", "page");
-  return data;
+  revalidatePath("/my-journey", "page");
 };
 
 export const getBookmarkedCompanions = async (userId: string) => {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
     .from("bookmarks")
-    .select(`id, companion_id, companions:companion_id (*)`)
+    .select(`companion_id, companions:companion_id (*)`)
     .eq("user_id", userId);
   if (error) {
     throw new Error(error.message);
   }
 
-  const uniqueBookmarks = new Map<
-    string,
-    { companion: Companion; bookmarkId: number | string }
-  >();
-  const duplicateBookmarkIds: (number | string)[] = [];
-
+  const uniqueCompanions = new Map<string, Companion>();
   for (const row of data) {
     if (!row.companions) continue;
-
-    const existing = uniqueBookmarks.has(row.companion_id);
-    if (existing) {
-      duplicateBookmarkIds.push(row.id);
-      continue;
-    }
-
-    uniqueBookmarks.set(row.companion_id, {
-      companion: row.companions as Companion,
-      bookmarkId: row.id,
-    });
+    uniqueCompanions.set(
+      row.companion_id,
+      row.companions as Companion,
+    );
   }
 
-  if (duplicateBookmarkIds.length > 0) {
-    const { error: cleanupError } = await supabase
-      .from("bookmarks")
-      .delete()
-      .in("id", duplicateBookmarkIds);
-
-    if (cleanupError) {
-      console.error("Failed to remove duplicate bookmarks", cleanupError);
-    }
-  }
-
-  return [...uniqueBookmarks.values()].map(({ companion }) => companion);
+  return [...uniqueCompanions.values()];
 };

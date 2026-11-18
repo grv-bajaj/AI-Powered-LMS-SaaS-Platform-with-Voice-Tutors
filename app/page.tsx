@@ -22,7 +22,7 @@ const Page = async () => {
       <section className='home-section'>
         {companions.map((companion) => (
           <CompanionCard
-            key={companion.id}
+            key={`${companion.id}-${companion.bookmarked}`}
             {...companion}
             color={getSubjectColor(companion.subject)}
           />
